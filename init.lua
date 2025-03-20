@@ -279,7 +279,7 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  { -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -325,7 +325,7 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
-        { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
+        { '<leader>c', group = '[C]ode',     mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
@@ -365,7 +365,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -393,11 +393,11 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+        --  defaults = {
+        --     defaults = {
+        --       file_ignore_patterns = {"node_modules", ".git", "build", "tmp"},
+        --     },
         --   },
-        -- },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
@@ -468,8 +468,8 @@ require('lazy').setup({
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim', opts = {} },
-      'williamboman/mason-lspconfig.nvim',
+      { 'williamboman/mason.nvim',           opts = {} },
+      { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', "lua_ls" }, auto_install = true } },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -478,6 +478,7 @@ require('lazy').setup({
       -- Allows extra capabilities provided by nvim-cmp
       'hrsh7th/cmp-nvim-lsp',
     },
+
     config = function()
       -- Brief aside: **What is LSP?**
       --
@@ -660,7 +661,18 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                typeCheckingMode = 'basic',       -- Set your preferred type checking mode (off, basic, or strict)
+                autoSearchPaths = true,           -- Automatically add workspace paths
+                useLibraryCodeForTypes = true,    -- Use types from the Python standard library
+                diagnosticMode = 'openFilesOnly', -- Limit diagnostics to open files
+              },
+            },
+          },
+        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -671,6 +683,21 @@ require('lazy').setup({
         -- ts_ls = {},
         --
 
+        --settings = {
+        --pylsp = {
+        --plugins = {
+        --pyflakes = { enabled = false },
+        --pycodestyle = { enabled = false },
+        --autopep8 = { enabled = false },
+        --yapf = { enabled = false },
+        --mccabe = { enabled = false },
+        --pylsp_mypy = { enabled = false },
+        --pylsp_black = { enabled = false },
+        --pylsp_isort = { enabled = false },
+        --},
+        --},
+        --},
+        --},
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -721,52 +748,8 @@ require('lazy').setup({
         },
       }
     end,
-  },
-
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    event = { 'BufWritePre' },
-    cmd = { 'ConformInfo' },
-    keys = {
-      {
-        '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_format = 'fallback' }
-        end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
     },
-    opts = {
-      notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        local lsp_format_opt
-        if disable_filetypes[vim.bo[bufnr].filetype] then
-          lsp_format_opt = 'never'
-        else
-          lsp_format_opt = 'fallback'
-        end
-        return {
-          timeout_ms = 500,
-          lsp_format = lsp_format_opt,
-        }
-      end,
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
-      },
-    },
-  },
-
-  { -- Autocompletion
+    { -- Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
     dependencies = {
@@ -786,12 +769,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+           {
+             'rafamadriz/friendly-snippets',
+             config = function()
+               require('luasnip.loaders.from_vscode').lazy_load()
+             end,
+           },
         },
       },
       'saadparwaiz1/cmp_luasnip',
@@ -816,7 +799,6 @@ require('lazy').setup({
           end,
         },
         completion = { completeopt = 'menu,menuone,noinsert' },
-
         -- For an understanding of why these mappings were
         -- chosen, you will need to read `:help ins-completion`
         --
@@ -884,26 +866,10 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
-      }
-
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-    end,
+  {
+    'catppuccin/nvim',
+    name = 'catppuccin',
+    priority = 1000,
   },
 
   -- Highlight todo, notes, etc in comments
@@ -952,7 +918,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'python' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -981,23 +947,18 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
-  --
-  -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
-  -- Or use telescope!
-  -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
-  -- you can continue same window with `<space>sr` which resumes last telescope search
+  { import = 'custom.plugins' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -1020,5 +981,56 @@ require('lazy').setup({
   },
 })
 
+local function activate_venv_or_create()
+  -- Find the closest '.venv' directory starting from the current file's directory
+  local venv_dir = vim.fn.finddir('.venv', '.;..;')
+
+  if venv_dir ~= '' then
+    local venv_path = vim.fn.fnamemodify(venv_dir, ':p')
+    vim.env.VIRTUAL_ENV = venv_path
+    vim.env.PYTHONPATH = venv_path .. '/lib/python3.13/site-packages' -- Adjust Python version if needed
+    vim.notify('Virtual environment activated: ' .. venv_path, vim.log.levels.INFO)
+    return
+  end
+
+  -- No virtual environment found, create one in the current directory
+  vim.notify('No virtual environment found. Creating one in the current directory...', vim.log.levels.WARN)
+  vim.fn.system 'python3 -m venv .venv'
+
+  local new_venv_path = vim.fn.getcwd() .. '/.venv'
+  vim.env.VIRTUAL_ENV = new_venv_path
+  vim.env.PYTHONPATH = new_venv_path .. '/lib/python3.13/site-packages'
+  vim.notify('Virtual environment created and activated: ' .. new_venv_path, vim.log.levels.INFO)
+end
+
+-- Automatically call the function when a Python file is opened
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = '*.py',
+  callback = activate_venv_or_create,
+})
+
+-- Function to run the current Python file using a virtual environment if available
+local function RunPython()
+  local venv_path = vim.fn.finddir('.venv', '.;')   -- Find 'venv' folder in current project
+  local python_cmd = 'python ' .. vim.fn.expand '%' -- Default to system Python
+
+  if venv_path ~= '' then
+    python_cmd = venv_path .. '/bin/python ' .. vim.fn.expand '%' -- Use venv Python if found
+  end
+
+  vim.cmd('!' .. python_cmd)
+end
+
+-- Register the ":RunPython" command in Neovim
+vim.api.nvim_create_user_command('RunPython', function()
+  RunPython()
+end, {})
+
+-- Set a keybinding to run Python files with <leader>r
+vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = 'Run Python file with virtual environment' })
+vim.cmd 'colorscheme catppuccin'
+vim.keymap.set('n', '<Leader>v', function()
+  activate_venv_or_create()
+end, { desc = 'Activate nearest virtual environment' })
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
