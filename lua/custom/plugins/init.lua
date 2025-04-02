@@ -4,6 +4,10 @@
 -- See the kickstart.nvim README for more information
 return {
   {
+    'github/copilot.vim',
+    config = function() end,
+  },
+  {
     'stevearc/dressing.nvim',
     event = 'VeryLazy',
   },

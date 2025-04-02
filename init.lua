@@ -469,7 +469,7 @@ require('lazy').setup({
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
       { 'williamboman/mason.nvim',           opts = {} },
-      { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', "lua_ls" }, auto_install = true } },
+      { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', 'lua_ls' }, auto_install = true } },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -673,6 +673,36 @@ require('lazy').setup({
             },
           },
         },
+        --        ast_grep = {
+        --          settings = {},
+        --        },
+        --        basedpyright = {
+        --          settings = {},
+        --        },
+        --        harper_ls = {
+        --          settings = {},
+        --        },
+        --        jedi_language_server = {
+        --          settings = {},
+        --        },
+        --        mutt_ls = {
+        --          settings = {},
+        --        },
+        --        pylsp = {
+        --          settings = {},
+        --        },
+        --        pylyzer = {
+        --          settings = {},
+        --        },
+        --        pyre = {
+        --          settings = {},
+        --        },
+        --        ruff = {
+        --          settings = {},
+        --        },
+        --        sourcery = {
+        --          settings = {},
+        --        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -748,8 +778,8 @@ require('lazy').setup({
         },
       }
     end,
-    },
-    { -- Autocompletion
+  },
+  { -- Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
     dependencies = {
@@ -769,12 +799,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-           {
-             'rafamadriz/friendly-snippets',
-             config = function()
-               require('luasnip.loaders.from_vscode').lazy_load()
-             end,
-           },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
       },
       'saadparwaiz1/cmp_luasnip',
@@ -1004,20 +1034,20 @@ local function activate_venv_or_create()
 end
 
 -- Automatically call the function when a Python file is opened
-vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = '*.py',
-  callback = activate_venv_or_create,
-})
+--vim.api.nvim_create_autocmd('BufEnter', {
+--  pattern = '*.py',
+--  callback = activate_venv_or_create,
+--})
 
 -- Function to run the current Python file using a virtual environment if available
 local function RunPython()
-  local venv_path = vim.fn.finddir('.venv', '.;')   -- Find 'venv' folder in current project
-  local python_cmd = 'python ' .. vim.fn.expand '%' -- Default to system Python
+  local venv_path = vim.fn.finddir('.venv', '.;..;') -- Find 'venv' folder in current project
+  local python_cmd = 'python ' .. vim.fn.expand '%'  -- Default to system Python
 
   if venv_path ~= '' then
     python_cmd = venv_path .. '/bin/python ' .. vim.fn.expand '%' -- Use venv Python if found
   end
-
+  vim.cmd 'w'
   vim.cmd('!' .. python_cmd)
 end
 
@@ -1032,5 +1062,12 @@ vim.cmd 'colorscheme catppuccin'
 vim.keymap.set('n', '<Leader>v', function()
   activate_venv_or_create()
 end, { desc = 'Activate nearest virtual environment' })
+
+-- make a command that changes directories in order for python files to run correctly
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = '*.py',
+  command = 'lcd %:p:h',
+})
+vim.o.clipboard = 'unnamedplus'
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
