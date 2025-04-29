@@ -4,6 +4,16 @@
 -- See the kickstart.nvim README for more information
 return {
   {
+    'lervag/vimtex',
+    lazy = false, -- we don't want to lazy load VimTeX
+    -- tag = "v2.15", -- uncomment to pin to a specific release
+    init = function()
+      -- VimTeX configuration goes here, e.g.
+      vim.g.vimtex_view_method = 'skim'
+      vim.g.vimtex_compiler_method = 'latexmk'
+    end,
+  },
+  {
     'github/copilot.vim',
     config = function() end,
   },
@@ -31,6 +41,7 @@ return {
           'eslint_d', -- ts/js linter
           'shfmt',
           'ruff',
+          'ltex-plus',
         },
         -- auto-install configured formatters & linters (with null-ls)
         automatic_installation = true,
@@ -38,9 +49,38 @@ return {
 
       local sources = {
         diagnostics.checkmake,
-        formatting.prettier.with { filetypes = { 'html', 'json', 'yaml', 'markdown', 'python' } },
+        --formatting.eslint_d.with {
+        --diagnostics.chktex,
+
+        -- linter
+        --formatting.latexindent.with {
+        --  filetypes = { 'tex', 'latex' },
+        --  extra_args = { '-m' }, -- optional: preserve indentation, tweak as needed
+        --},
+
+        formatting.prettier.with {
+          filetypes = { 'html', 'json', 'yaml', 'markdown', 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'vue', 'css' },
+          extra_args = {
+            '--tab-width',
+            '4',
+            '--use-tabs',
+            'false',
+            '--single-quote',
+            'true',
+            '--trailing-comma',
+            'all',
+            '--bracket-spacing',
+            'true',
+            '--print-width',
+            '160',
+            '--arrow-parens',
+            'always',
+          },
+        },
+
         formatting.stylua,
-        formatting.shfmt.with { args = { '-i', '4' } },
+        --formatting.stylua.with { extra_args = { '--indent-type', 'Spaces', '--indent-width', '2' } },
+        formatting.shfmt.with { args = { '-i', '4', '-ci', '-bn', '-sr' } },
         formatting.terraform_fmt,
         require('none-ls.formatting.ruff').with { extra_args = { '--extend-select', 'I' } },
         require 'none-ls.formatting.ruff_format',

@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -279,7 +279,7 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  {                     -- Useful plugin to show you pending keybinds.
+  { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -325,7 +325,7 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
-        { '<leader>c', group = '[C]ode',     mode = { 'n', 'x' } },
+        { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
@@ -365,7 +365,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -393,12 +393,12 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        --  defaults = {
-        --     defaults = {
-        --       file_ignore_patterns = {"node_modules", ".git", "build", "tmp"},
-        --     },
-        --   },
-        -- pickers = {}
+        defaults = {
+          defaults = {
+            file_ignore_patterns = { 'node_modules', '.git', 'build', 'tmp' },
+          },
+        },
+        pickers = {},
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -468,7 +468,7 @@ require('lazy').setup({
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim',           opts = {} },
+      { 'williamboman/mason.nvim', opts = {} },
       { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', 'lua_ls' }, auto_install = true } },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -665,9 +665,9 @@ require('lazy').setup({
           settings = {
             python = {
               analysis = {
-                typeCheckingMode = 'basic',       -- Set your preferred type checking mode (off, basic, or strict)
-                autoSearchPaths = true,           -- Automatically add workspace paths
-                useLibraryCodeForTypes = true,    -- Use types from the Python standard library
+                typeCheckingMode = 'basic', -- Set your preferred type checking mode (off, basic, or strict)
+                autoSearchPaths = true, -- Automatically add workspace paths
+                useLibraryCodeForTypes = true, -- Use types from the Python standard library
                 diagnosticMode = 'openFilesOnly', -- Limit diagnostics to open files
               },
             },
@@ -846,7 +846,7 @@ require('lazy').setup({
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<C-Space>'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -857,7 +857,7 @@ require('lazy').setup({
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
           --  completions whenever it has completion options available.
-          ['<C-Space>'] = cmp.mapping.complete {},
+          --['<C-Space>'] = cmp.mapping.complete {},
 
           -- Think of <c-l> as moving to the right of your snippet expansion.
           --  So if you have a snippet that's like:
@@ -1041,13 +1041,11 @@ end
 
 -- Function to run the current Python file using a virtual environment if available
 local function RunPython()
-  local venv_path = vim.fn.finddir('.venv', '.;..;') -- Find 'venv' folder in current project
-  local python_cmd = 'python ' .. vim.fn.expand '%'  -- Default to system Python
+  --local venv_path = vim.fn.finddir('.venv', '.;..;') -- Find 'venv' folder in current project
+  local python_cmd = 'python ' .. vim.fn.expand '%' -- Default to system Python
 
-  if venv_path ~= '' then
-    python_cmd = venv_path .. '/bin/python ' .. vim.fn.expand '%' -- Use venv Python if found
-  end
   vim.cmd 'w'
+  vim.notify('Running Python file: ' .. vim.fn.expand '%', vim.log.levels.INFO)
   vim.cmd('!' .. python_cmd)
 end
 
