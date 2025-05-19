@@ -895,12 +895,19 @@ require('lazy').setup({
       }
     end,
   },
-
   {
-    'catppuccin/nvim',
-    name = 'catppuccin',
+    'ellisonleao/gruvbox.nvim',
     priority = 1000,
+    config = function()
+      vim.o.background = 'dark'
+      vim.cmd 'colorscheme gruvbox'
+    end,
   },
+  --{
+  --  'catppuccin/nvim',
+  --  name = 'catppuccin',
+  --  priority = 1000,
+  --},
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
@@ -1056,7 +1063,7 @@ end, {})
 
 -- Set a keybinding to run Python files with <leader>r
 vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = 'Run Python file with virtual environment' })
-vim.cmd 'colorscheme catppuccin'
+--vim.cmd 'colorscheme catppuccin'
 vim.keymap.set('n', '<Leader>v', function()
   activate_venv_or_create()
 end, { desc = 'Activate nearest virtual environment' })
