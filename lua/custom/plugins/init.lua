@@ -34,10 +34,10 @@ return {
       vim.g.vimtex_compiler_method = 'latexmk'
     end,
   },
-  {
-    'github/copilot.vim',
-    config = function() end,
-  },
+ -- {
+ --   'github/copilot.vim',
+ --   config = function() end,
+ -- },
   {
     'stevearc/dressing.nvim',
     event = 'VeryLazy',
@@ -50,7 +50,7 @@ return {
     },
     config = function()
       local null_ls = require 'null-ls'
-      local formatting = null_ls.builtins.formatting   -- to setup formatters
+      local formatting = null_ls.builtins.formatting -- to setup formatters
       local diagnostics = null_ls.builtins.diagnostics -- to setup linters
 
       -- list of formatters & linters for mason to install
@@ -58,10 +58,11 @@ return {
         ensure_installed = {
           'checkmake',
           'prettier', -- ts/js formatter
-          'stylua',   -- lua formatter
+          --'stylua', -- lua formatter
           'eslint_d', -- ts/js linter
           'shfmt',
           'ruff',
+          'latexindent',
           'ltex-plus',
         },
         -- auto-install configured formatters & linters (with null-ls)
@@ -80,6 +81,7 @@ return {
         --},
 
         formatting.prettier.with {
+
           filetypes = { 'html', 'json', 'yaml', 'markdown', 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'vue', 'css' },
           extra_args = {
             '--tab-width',
@@ -99,7 +101,7 @@ return {
           },
         },
 
-        formatting.stylua,
+        --formatting.stylua,
         --formatting.stylua.with { extra_args = { '--indent-type', 'Spaces', '--indent-width', '2' } },
         formatting.shfmt.with { args = { '-i', '4', '-ci', '-bn', '-sr' } },
         formatting.terraform_fmt,
@@ -113,13 +115,20 @@ return {
         sources = sources,
         -- you can reuse a shared lspconfig on_attach callback here
         on_attach = function(client, bufnr)
+          -- Ensure proper positionEncoding is set
+          client.offset_encoding = 'utf-16'
           if client.supports_method 'textDocument/formatting' then
             vim.api.nvim_clear_autocmds { group = augroup, buffer = bufnr }
             vim.api.nvim_create_autocmd('BufWritePre', {
               group = augroup,
               buffer = bufnr,
               callback = function()
-                vim.lsp.buf.format { async = false }
+                vim.lsp.buf.format {
+                  async = false,
+                  filter = function(c)
+                    return c.name == 'null-ls'
+                  end,
+                }
               end,
             })
           end

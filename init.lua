@@ -164,7 +164,7 @@ vim.opt.scrolloff = 10
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>qq', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -279,7 +279,7 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  { -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -325,7 +325,7 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
-        { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
+        { '<leader>c', group = '[C]ode',     mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
@@ -365,7 +365,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -468,8 +468,8 @@ require('lazy').setup({
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim', opts = {} },
-      { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', 'lua_ls' }, auto_install = true } },
+      { 'williamboman/mason.nvim',           opts = {} },
+      { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', 'lua_ls', 'ts_ls' }, auto_install = true } },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -661,56 +661,57 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        pyright = {
-          settings = {
-            python = {
-              analysis = {
-                typeCheckingMode = 'basic', -- Set your preferred type checking mode (off, basic, or strict)
-                autoSearchPaths = true, -- Automatically add workspace paths
-                useLibraryCodeForTypes = true, -- Use types from the Python standard library
-                diagnosticMode = 'openFilesOnly', -- Limit diagnostics to open files
-              },
-            },
-          },
-        },
-        --        ast_grep = {
-        --          settings = {},
-        --        },
-        --        basedpyright = {
-        --          settings = {},
-        --        },
-        --        harper_ls = {
-        --          settings = {},
-        --        },
-        --        jedi_language_server = {
-        --          settings = {},
-        --        },
-        --        mutt_ls = {
-        --          settings = {},
-        --        },
-        --        pylsp = {
-        --          settings = {},
-        --        },
-        --        pylyzer = {
-        --          settings = {},
-        --        },
-        --        pyre = {
-        --          settings = {},
-        --        },
-        --        ruff = {
-        --          settings = {},
-        --        },
-        --        sourcery = {
-        --          settings = {},
-        --        },
+        --ast_grep = {
+        --  settings = {},
+        --},
+        --basedpyright = {
+        --  settings = {},
+        --},
+        --harper_ls = {
+        --  settings = {},
+        --},
+        --jedi_language_server = {
+        --  settings = {},
+        --},
+        --mutt_ls = {
+        --  settings = {},
+        --},
+        --pylsp = {
+        --  settings = {},
+        --},
+        --pylyzer = {
+        --  settings = {},
+        --},
+        --pyre = {
+        --  settings = {},
+        --},
+        --ruff = {
+        --  settings = {},
+        --},
+        --sourcery = {
+        --  settings = {},
+        --},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
+        pyright = {
+          capabilities = { format = false },
+          settings = {
+            python = {
+              analysis = {
+                typeCheckingMode = 'basic',       -- Set your preferred type checking mode (off, basic, or strict)
+                autoSearchPaths = true,           -- Automatically add workspace paths
+                useLibraryCodeForTypes = true,    -- Use types from the Python standard library
+                diagnosticMode = 'openFilesOnly', -- Limit diagnostics to open files
+              },
+            },
+          },
+        },
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        ts_ls = {},
         --
 
         --settings = {
@@ -765,7 +766,7 @@ require('lazy').setup({
 
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-        automatic_installation = false,
+        automatic_installation = true,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -895,6 +896,12 @@ require('lazy').setup({
       }
     end,
   },
+
+  --{
+  --  'catppuccin/nvim',
+  --  name = 'catppuccin',
+  --  priority = 1000,
+  --},
   {
     'ellisonleao/gruvbox.nvim',
     priority = 1000,
@@ -903,11 +910,6 @@ require('lazy').setup({
       vim.cmd 'colorscheme gruvbox'
     end,
   },
-  --{
-  --  'catppuccin/nvim',
-  --  name = 'catppuccin',
-  --  priority = 1000,
-  --},
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
@@ -1063,10 +1065,15 @@ end, {})
 
 -- Set a keybinding to run Python files with <leader>r
 vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = 'Run Python file with virtual environment' })
---vim.cmd 'colorscheme catppuccin'
+vim.cmd 'colorscheme gruvbox'
 vim.keymap.set('n', '<Leader>v', function()
   activate_venv_or_create()
 end, { desc = 'Activate nearest virtual environment' })
+
+-- set a keybinding for opening stuff from the quicklist
+vim.keymap.set("n", "<leader>qo", function()
+  vim.cmd("cfdo edit")
+end, { desc = "Open all quickfix entries in tabs" })
 
 -- make a command that changes directories in order for python files to run correctly
 vim.api.nvim_create_autocmd('BufEnter', {
@@ -1074,6 +1081,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
   command = 'lcd %:p:h',
 })
 vim.o.clipboard = 'unnamedplus'
-vim.cmd 'Copilot disable'
+--vim.cmd 'Copilot disable'
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
