@@ -1115,3 +1115,30 @@ vim.keymap.set("n", "<leader>mp", ":MarkdownPreview<CR>", { desc = "[P]review Ma
 
 -- Toggle Markdown preview (open/close, stays synced)
 vim.keymap.set("n", "<leader>mo", ":MarkdownPreviewToggle<CR>", { desc = "[O]pen/Close Markdown Preview" })
+
+-- Jupytext + nbconvert keymaps
+
+-- Sync .ipynb with .md
+vim.keymap.set("n", "<leader>mi", function()
+  vim.cmd("!jupytext --sync %")
+end, { desc = "[M] Sync .ipynb <-> .md" })
+
+-- Sync .ipynb with .py
+vim.keymap.set("n", "<leader>mpy", function()
+  vim.cmd("!jupytext --set-formats ipynb,py %:r.ipynb")
+end, { desc = "[M] Sync .ipynb <-> .py" })
+
+-- Execute whole notebook into Markdown
+vim.keymap.set("n", "<leader>me", function()
+  vim.cmd("!jupyter nbconvert --execute --to markdown %:r.ipynb")
+end, { desc = "[M] Execute notebook → .md" })
+
+-- Sync + Execute (full refresh)
+vim.keymap.set("n", "<leader>mr", function()
+  vim.cmd("!jupytext --sync % && jupyter nbconvert --execute --to markdown %:r.ipynb")
+end, { desc = "[M] Sync + Execute notebook" })
+
+-- Export notebook to Python (one-time conversion)
+vim.keymap.set("n", "<leader>mp", function()
+  vim.cmd("!jupytext --to py %:r.ipynb")
+end, { desc = "[M] Export notebook → .py" })

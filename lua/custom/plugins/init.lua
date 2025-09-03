@@ -6,31 +6,35 @@ return {
   {
   "Vigemus/iron.nvim",
   config = function()
-    local iron = require("iron.core")
+local iron = require("iron.core")
 
-    iron.setup {
-      config = {
-        scratch_repl = true,
-        repl_definition = {
-          python = {
-            -- start a Jupyter console instead of plain python
-            command = { "jupyter", "console", "--simple-prompt" },
-          },
-        },
-        repl_open_cmd = "vsplit", -- open REPL in vertical split
+iron.setup {
+  config = {
+    scratch_repl = true,
+    repl_definition = {
+      python = {
+        command = { "jupyter", "console", "--simple-prompt" },
       },
-      keymaps = {
-        send_motion = "<leader>sc",
-        visual_send = "<leader>sc",
-        send_file = "<leader>sf",
-        send_line = "<leader>sl",
-        send_paragraph = "<leader>sp",
-        exit = "<leader>sq",
-        clear = "<leader>cl",
-      },
-      highlight = { italic = true },
-      ignore_blank_lines = true,
-    }
+    },
+    repl_open_cmd = "vsplit",
+  },
+  keymaps = {}, -- disable default keymaps
+  highlight = { italic = true },
+  ignore_blank_lines = true,
+}
+
+-- Custom keymaps under <leader>mc
+local opts = { noremap = true, silent = true }
+
+vim.keymap.set("n", "<leader>mcr", "<cmd>IronRepl<cr>", { desc = "[C]ode: Start REPL" })
+vim.keymap.set("n", "<leader>mcq", "<cmd>IronExit<cr>", { desc = "[C]ode: Quit REPL" })
+vim.keymap.set("n", "<leader>mcl", "<cmd>IronSendLine<cr>", { desc = "[C]ode: Send Line" })
+vim.keymap.set("n", "<leader>mcp", "<cmd>IronSendParagraph<cr>", { desc = "[C]ode: Send Paragraph" })
+vim.keymap.set("n", "<leader>mcf", "<cmd>IronSendFile<cr>", { desc = "[C]ode: Send File" })
+vim.keymap.set("n", "<leader>mcx", "<cmd>IronClear<cr>", { desc = "[C]ode: Clear REPL" })
+
+-- Visual mode mapping for sending selection
+vim.keymap.set("v", "<leader>mcs", "<cmd>IronVisualSend<cr>", { desc = "[C]ode: Send Selection" })
   end,
 },
   {'ekickx/clipboard-image.nvim'},
