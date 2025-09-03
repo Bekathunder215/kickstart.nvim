@@ -166,6 +166,9 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>qq', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
+-- image paste keymaps
+--vim.keymap.set('n', '<leader>mm', require('ekickx/clipboard-image.nvim').Paste, { desc = 'Open markdown preview' })
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -1084,3 +1087,31 @@ vim.o.clipboard = 'unnamedplus'
 --vim.cmd 'Copilot disable'
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+--
+-- Toggle Treesitter highlighting for Markdown
+--
+
+-- Create a group for all Markdown-related mappings
+vim.keymap.set("n", "<leader>m", "<nop>", { desc = "[M]arkdownStuff" })
+
+-- Toggle Treesitter highlighting for Markdown
+vim.keymap.set("n", "<leader>mt", function()
+  local disable = require("nvim-treesitter.configs").get_module("highlight").disable
+  if vim.tbl_contains(disable, "markdown") then
+    require("nvim-treesitter.configs").setup {
+      highlight = { enable = true, disable = {} },
+    }
+    vim.notify("Treesitter Markdown highlighting ENABLED", vim.log.levels.INFO)
+  else
+    require("nvim-treesitter.configs").setup {
+      highlight = { enable = true, disable = { "markdown" } },
+    }
+    vim.notify("Treesitter Markdown highlighting DISABLED", vim.log.levels.WARN)
+  end
+end, { desc = "[T]oggle Treesitter highlighting" })
+
+-- Open Markdown preview in browser
+vim.keymap.set("n", "<leader>mp", ":MarkdownPreview<CR>", { desc = "[P]review Markdown" })
+
+-- Toggle Markdown preview (open/close, stays synced)
+vim.keymap.set("n", "<leader>mo", ":MarkdownPreviewToggle<CR>", { desc = "[O]pen/Close Markdown Preview" })

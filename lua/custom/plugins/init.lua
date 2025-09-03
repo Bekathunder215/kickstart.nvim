@@ -4,6 +4,38 @@
 -- See the kickstart.nvim README for more information
 return {
   {
+  "Vigemus/iron.nvim",
+  config = function()
+    local iron = require("iron.core")
+
+    iron.setup {
+      config = {
+        scratch_repl = true,
+        repl_definition = {
+          python = {
+            -- start a Jupyter console instead of plain python
+            command = { "jupyter", "console", "--simple-prompt" },
+          },
+        },
+        repl_open_cmd = "vsplit", -- open REPL in vertical split
+      },
+      keymaps = {
+        send_motion = "<leader>sc",
+        visual_send = "<leader>sc",
+        send_file = "<leader>sf",
+        send_line = "<leader>sl",
+        send_paragraph = "<leader>sp",
+        exit = "<leader>sq",
+        clear = "<leader>cl",
+      },
+      highlight = { italic = true },
+      ignore_blank_lines = true,
+    }
+  end,
+},
+  {'ekickx/clipboard-image.nvim'},
+  { 'iamcco/markdown-preview.nvim', build = 'cd app && npm install' },
+  {
     'kdheepak/lazygit.nvim',
     lazy = true,
 
@@ -58,7 +90,7 @@ return {
         ensure_installed = {
           'checkmake',
           'prettier', -- ts/js formatter
-          --'stylua', -- lua formatter
+          'stylua', -- lua formatter
           'eslint_d', -- ts/js linter
           'shfmt',
           'ruff',
@@ -82,7 +114,7 @@ return {
 
         formatting.prettier.with {
 
-          filetypes = { 'html', 'json', 'yaml', 'markdown', 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'vue', 'css' },
+          filetypes = { 'html', 'json', 'yaml', 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'vue', 'css' },
           extra_args = {
             '--tab-width',
             '4',
