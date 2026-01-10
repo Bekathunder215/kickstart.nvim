@@ -111,7 +111,7 @@ vim.opt.mouse = 'a'
 vim.opt.showmode = false
 
 -- Sync clipboard between OS and Neovim.
---  Schedule the setting after `UiEnter` because it can increase startup-time.
+--  Schedule the setting after `UiEnter` to improve startup time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
 vim.schedule(function()
@@ -131,8 +131,8 @@ vim.opt.smartcase = true
 -- Keep signcolumn on by default
 vim.opt.signcolumn = 'yes'
 
--- Decrease update time
-vim.opt.updatetime = 250
+-- Decrease update time for better responsiveness
+vim.opt.updatetime = 200
 
 -- Decrease mapped sequence wait time
 vim.opt.timeoutlen = 300
@@ -159,9 +159,7 @@ vim.opt.scrolloff = 10
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = 'Clear search highlights' })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>qq', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -282,13 +280,12 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  {                     -- Useful plugin to show you pending keybinds.
+  { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
-      -- delay between pressing a key and opening which-key (milliseconds)
-      -- this setting is independent of vim.opt.timeoutlen
-      delay = 0,
+      -- Delay before which-key opens (milliseconds)
+      delay = 200,
       icons = {
         -- set icon mappings to true if you have a Nerd Font
         mappings = vim.g.have_nerd_font,
@@ -328,7 +325,7 @@ require('lazy').setup({
 
       -- Document existing key chains
       spec = {
-        { '<leader>c', group = '[C]ode',     mode = { 'n', 'x' } },
+        { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
         { '<leader>s', group = '[S]earch' },
@@ -368,7 +365,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -393,12 +390,10 @@ require('lazy').setup({
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup {
-        -- You can put your default mappings / updates / etc. in here
-        --  All the info you're looking for is in `:help telescope.setup()`
-        --
         defaults = {
-          defaults = {
-            file_ignore_patterns = { 'node_modules', '.git', 'build', 'tmp' },
+          file_ignore_patterns = { 'node_modules', '.git', 'build', 'tmp', '__pycache__' },
+          layout_config = {
+            horizontal = { preview_width = 0.55 },
           },
         },
         pickers = {},
@@ -426,17 +421,13 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
-      -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
-        -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
 
-      -- It's also possible to pass additional configuration options.
-      --  See `:help telescope.builtin.live_grep()` for information about particular keys
       vim.keymap.set('n', '<leader>s/', function()
         builtin.live_grep {
           grep_open_files = true,
@@ -444,7 +435,6 @@ require('lazy').setup({
         }
       end, { desc = '[S]earch [/] in Open Files' })
 
-      -- Shortcut for searching your Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
@@ -471,7 +461,7 @@ require('lazy').setup({
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim',           opts = {} },
+      { 'williamboman/mason.nvim', opts = {} },
       { 'williamboman/mason-lspconfig.nvim', opts = { ensure_installed = { 'pyright', 'lua_ls', 'ts_ls' }, auto_install = true } },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -652,6 +642,14 @@ require('lazy').setup({
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
+      local function get_python_path()
+        local venv = vim.fn.finddir('.venv', '.;')
+        if venv ~= '' then
+          return vim.fn.fnamemodify(venv, ':p') .. '/bin/python'
+        end
+        return vim.fn.exepath 'python3' or vim.fn.exepath 'python' or 'python'
+      end
+
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --
@@ -702,13 +700,20 @@ require('lazy').setup({
         --
         pyright = {
           capabilities = { format = false },
+          before_init = function(_, config)
+            config.settings = config.settings or {}
+            config.settings.python = config.settings.python or {}
+            config.settings.python.pythonPath = get_python_path()
+          end,
           settings = {
             python = {
               analysis = {
-                typeCheckingMode = 'basic',       -- Set your preferred type checking mode (off, basic, or strict)
-                autoSearchPaths = true,           -- Automatically add workspace paths
-                useLibraryCodeForTypes = true,    -- Use types from the Python standard library
-                diagnosticMode = 'openFilesOnly', -- Limit diagnostics to open files
+                typeCheckingMode = 'basic',
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                diagnosticMode = 'openFilesOnly',
+                autoImportCompletions = true,
+                indexing = true,
               },
             },
           },
@@ -717,6 +722,13 @@ require('lazy').setup({
         ts_ls = {},
         --
 
+        ltex_plus = {
+          enabled = {
+            'markdown',
+            'tex',
+            'latex',
+          },
+        },
         --settings = {
         --pylsp = {
         --plugins = {
@@ -900,18 +912,10 @@ require('lazy').setup({
     end,
   },
 
-  --{
-  --  'catppuccin/nvim',
-  --  name = 'catppuccin',
-  --  priority = 1000,
-  --},
   {
     'ellisonleao/gruvbox.nvim',
     priority = 1000,
-    config = function()
-      vim.o.background = 'dark'
-      vim.cmd 'colorscheme gruvbox'
-    end,
+    config = true,
   },
 
   -- Highlight todo, notes, etc in comments
@@ -957,27 +961,27 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    main = 'nvim-treesitter.configs', -- Sets main module to use for opts
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+    event = { 'BufReadPost', 'BufNewFile' },
+    cmd = { 'TSUpdateSync', 'TSUpdate', 'TSInstall' },
+    main = 'nvim-treesitter.configs',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'python' },
-      -- Autoinstall languages that are not installed
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'python', 'javascript', 'typescript' },
       auto_install = true,
       highlight = {
         enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
+        additional_vim_regex_highlighting = false,
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = { enable = true, disable = { 'ruby', 'python' } },
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = '<C-space>',
+          node_incremental = '<C-space>',
+          scope_incremental = false,
+          node_decremental = '<bs>',
+        },
+      },
     },
-    -- There are additional nvim-treesitter modules that you can use to interact
-    -- with nvim-treesitter. You should go explore a few and see what interests you:
-    --
-    --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-    --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-    --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
@@ -992,15 +996,21 @@ require('lazy').setup({
   require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.formatting',
+  require 'kickstart.plugins.iron',
+  require 'kickstart.plugins.markdown',
+  require 'kickstart.plugins.lazygit',
+  require 'kickstart.plugins.vimtex',
+  require 'kickstart.plugins.ui',
+  -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  { import = 'custom.plugins' },
+  -- { import = 'custom.plugins' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
@@ -1024,41 +1034,46 @@ require('lazy').setup({
 })
 
 local function activate_venv_or_create()
-  -- Find the closest '.venv' directory starting from the current file's directory
-  local venv_dir = vim.fn.finddir('.venv', '.;..;')
+  local venv_dir = vim.fn.finddir('.venv', '.;')
 
   if venv_dir ~= '' then
     local venv_path = vim.fn.fnamemodify(venv_dir, ':p')
     vim.env.VIRTUAL_ENV = venv_path
-    vim.env.PYTHONPATH = venv_path .. '/lib/python3.13/site-packages' -- Adjust Python version if needed
     vim.notify('Virtual environment activated: ' .. venv_path, vim.log.levels.INFO)
-    return
+    return true
   end
 
-  -- No virtual environment found, create one in the current directory
   vim.notify('No virtual environment found. Creating one in the current directory...', vim.log.levels.WARN)
   vim.fn.system 'python3 -m venv .venv'
 
-  local new_venv_path = vim.fn.getcwd() .. '/.venv'
-  vim.env.VIRTUAL_ENV = new_venv_path
-  vim.env.PYTHONPATH = new_venv_path .. '/lib/python3.13/site-packages'
-  vim.notify('Virtual environment created and activated: ' .. new_venv_path, vim.log.levels.INFO)
+  if vim.v.shell_error == 0 then
+    local new_venv_path = vim.fn.getcwd() .. '/.venv'
+    vim.env.VIRTUAL_ENV = new_venv_path
+    vim.notify('Virtual environment created and activated: ' .. new_venv_path, vim.log.levels.INFO)
+    return true
+  else
+    vim.notify('Failed to create virtual environment', vim.log.levels.ERROR)
+    return false
+  end
 end
 
--- Automatically call the function when a Python file is opened
---vim.api.nvim_create_autocmd('BufEnter', {
---  pattern = '*.py',
---  callback = activate_venv_or_create,
---})
-
--- Function to run the current Python file using a virtual environment if available
 local function RunPython()
-  --local venv_path = vim.fn.finddir('.venv', '.;..;') -- Find 'venv' folder in current project
-  local python_cmd = 'python ' .. vim.fn.expand '%' -- Default to system Python
+  local file = vim.fn.expand '%:p'
+  local venv = vim.fn.finddir('.venv', '.;')
 
   vim.cmd 'w'
-  vim.notify('Running Python file: ' .. vim.fn.expand '%', vim.log.levels.INFO)
-  vim.cmd('!' .. python_cmd)
+
+  if venv ~= '' then
+    local python = vim.fn.fnamemodify(venv, ':p') .. 'bin/python'
+    vim.cmd('!' .. python .. ' ' .. vim.fn.shellescape(file))
+  else
+    vim.cmd('!python3 ' .. vim.fn.shellescape(file))
+  end
+end
+
+local venv = vim.fn.getcwd() .. '/.venv/bin/python'
+if vim.fn.executable(venv) == 1 then
+  vim.g.python3_host_prog = venv
 end
 
 -- Register the ":RunPython" command in Neovim
@@ -1066,79 +1081,36 @@ vim.api.nvim_create_user_command('RunPython', function()
   RunPython()
 end, {})
 
--- Set a keybinding to run Python files with <leader>r
-vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = 'Run Python file with virtual environment' })
-vim.cmd 'colorscheme gruvbox'
+-- Set a keybinding to run Python files with <leader>p
+vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = '[P]ython: Run file with venv' })
 vim.keymap.set('n', '<Leader>v', function()
   activate_venv_or_create()
-end, { desc = 'Activate nearest virtual environment' })
+end, { desc = '[V]irtual environment: Activate or create' })
 
--- set a keybinding for opening stuff from the quicklist
-vim.keymap.set("n", "<leader>qo", function()
-  vim.cmd("cfdo edit")
-end, { desc = "Open all quickfix entries in tabs" })
+-- Set colorscheme at end
+pcall(vim.cmd, 'colorscheme gruvbox')
 
--- make a command that changes directories in order for python files to run correctly
-vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = '*.py',
-  command = 'lcd %:p:h',
-})
-vim.o.clipboard = 'unnamedplus'
---vim.cmd 'Copilot disable'
+-- [[ Quickfix Keymaps ]]
+vim.keymap.set('n', '<leader>qo', '<cmd>cfdo edit<CR>', { desc = '[Q]uickfix: [O]pen all entries in tabs' })
+vim.keymap.set('n', '[q', '<cmd>cprev<CR>', { desc = '[Q]uickfix: [P]revious item' })
+vim.keymap.set('n', ']q', '<cmd>cnext<CR>', { desc = '[Q]uickfix: [N]ext item' })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
---
--- Toggle Treesitter highlighting for Markdown
---
 
--- Create a group for all Markdown-related mappings
-vim.keymap.set("n", "<leader>m", "<nop>", { desc = "[M]arkdownStuff" })
 
--- Toggle Treesitter highlighting for Markdown
-vim.keymap.set("n", "<leader>mt", function()
-  local disable = require("nvim-treesitter.configs").get_module("highlight").disable
-  if vim.tbl_contains(disable, "markdown") then
-    require("nvim-treesitter.configs").setup {
-      highlight = { enable = true, disable = {} },
-    }
-    vim.notify("Treesitter Markdown highlighting ENABLED", vim.log.levels.INFO)
-  else
-    require("nvim-treesitter.configs").setup {
-      highlight = { enable = true, disable = { "markdown" } },
-    }
-    vim.notify("Treesitter Markdown highlighting DISABLED", vim.log.levels.WARN)
+-- [[ Markdown & Jupyter Keymaps ]]
+vim.keymap.set('n', '<leader>mt', function()
+  local buf_ft = vim.bo.filetype
+  if buf_ft ~= 'markdown' then
+    vim.notify('Not a markdown file', vim.log.levels.WARN)
+    return
   end
-end, { desc = "[T]oggle Treesitter highlighting" })
+  vim.cmd 'TSBufToggle highlight'
+  vim.notify('Toggled Treesitter highlighting', vim.log.levels.INFO)
+end, { desc = '[M]arkdown: [T]oggle Treesitter highlighting' })
 
--- Open Markdown preview in browser
-vim.keymap.set("n", "<leader>mp", ":MarkdownPreview<CR>", { desc = "[P]review Markdown" })
-
--- Toggle Markdown preview (open/close, stays synced)
-vim.keymap.set("n", "<leader>mo", ":MarkdownPreviewToggle<CR>", { desc = "[O]pen/Close Markdown Preview" })
-
--- Jupytext + nbconvert keymaps
-
--- Sync .ipynb with .md
-vim.keymap.set("n", "<leader>mi", function()
-  vim.cmd("!jupytext --sync %")
-end, { desc = "[M] Sync .ipynb <-> .md" })
-
--- Sync .ipynb with .py
-vim.keymap.set("n", "<leader>mpy", function()
-  vim.cmd("!jupytext --set-formats ipynb,py %:r.ipynb")
-end, { desc = "[M] Sync .ipynb <-> .py" })
-
--- Execute whole notebook into Markdown
-vim.keymap.set("n", "<leader>me", function()
-  vim.cmd("!jupyter nbconvert --execute --to markdown %:r.ipynb")
-end, { desc = "[M] Execute notebook → .md" })
-
--- Sync + Execute (full refresh)
-vim.keymap.set("n", "<leader>mr", function()
-  vim.cmd("!jupytext --sync % && jupyter nbconvert --execute --to markdown %:r.ipynb")
-end, { desc = "[M] Sync + Execute notebook" })
-
--- Export notebook to Python (one-time conversion)
-vim.keymap.set("n", "<leader>mp", function()
-  vim.cmd("!jupytext --to py %:r.ipynb")
-end, { desc = "[M] Export notebook → .py" })
+vim.keymap.set('n', '<leader>mp', ':MarkdownPreview<CR>', { desc = '[M]arkdown: [P]review in browser' })
+vim.keymap.set('n', '<leader>mo', ':MarkdownPreviewToggle<CR>', { desc = '[M]arkdown: [O]pen/Close preview' })
+vim.keymap.set('n', '<leader>mi', ':!jupytext --sync %<CR>', { desc = '[M]arkdown: Sync .ipynb ↔ .md' })
+vim.keymap.set('n', '<leader>me', ':!jupyter nbconvert --execute --to markdown %:r.ipynb<CR>', { desc = '[M]arkdown: [E]xecute notebook → .md' })
