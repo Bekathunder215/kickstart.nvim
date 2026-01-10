@@ -118,6 +118,11 @@ vim.schedule(function()
   vim.opt.clipboard = 'unnamedplus'
 end)
 
+-- Disable optional providers (not needed, reduces warnings)
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_python3_provider = 0 -- We use venv instead
+vim.g.loaded_ruby_provider = 0
+
 -- Enable break indent
 vim.opt.breakindent = true
 
