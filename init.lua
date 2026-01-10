@@ -200,7 +200,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
 })
 
@@ -965,7 +965,22 @@ require('lazy').setup({
     cmd = { 'TSUpdateSync', 'TSUpdate', 'TSInstall' },
     main = 'nvim-treesitter.configs',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'python', 'javascript', 'typescript' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'python',
+        'javascript',
+        'typescript',
+      },
       auto_install = true,
       highlight = {
         enable = true,
@@ -1097,7 +1112,6 @@ vim.keymap.set('n', ']q', '<cmd>cnext<CR>', { desc = '[Q]uickfix: [N]ext item' }
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
-
 
 -- [[ Markdown & Jupyter Keymaps ]]
 vim.keymap.set('n', '<leader>mt', function()
