@@ -724,7 +724,15 @@ require('lazy').setup({
           },
         },
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {},
+        ts_ls = {
+          suggest = {
+            completeFunctionCalls = true,
+          },
+          preferences = {
+            includeCompletionsForImportStatements = true,
+          },
+          enabled = 'jsdoc',
+        },
         --
 
         ltex_plus = {
@@ -917,11 +925,7 @@ require('lazy').setup({
     end,
   },
 
-  {
-    'ellisonleao/gruvbox.nvim',
-    priority = 1000,
-    config = true,
-  },
+  require 'custom.plugins.colorschemes',
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
@@ -1107,9 +1111,6 @@ vim.keymap.set('n', '<Leader>v', function()
   activate_venv_or_create()
 end, { desc = '[V]irtual environment: Activate or create' })
 
--- Set colorscheme at end
-pcall(vim.cmd, 'colorscheme gruvbox')
-
 -- [[ Quickfix Keymaps ]]
 vim.keymap.set('n', '<leader>qo', '<cmd>cfdo edit<CR>', { desc = '[Q]uickfix: [O]pen all entries in tabs' })
 vim.keymap.set('n', '[q', '<cmd>cprev<CR>', { desc = '[Q]uickfix: [P]revious item' })
@@ -1133,3 +1134,6 @@ vim.keymap.set('n', '<leader>mp', ':MarkdownPreview<CR>', { desc = '[M]arkdown: 
 vim.keymap.set('n', '<leader>mo', ':MarkdownPreviewToggle<CR>', { desc = '[M]arkdown: [O]pen/Close preview' })
 vim.keymap.set('n', '<leader>mi', ':!jupytext --sync %<CR>', { desc = '[M]arkdown: Sync .ipynb ↔ .md' })
 vim.keymap.set('n', '<leader>me', ':!jupyter nbconvert --execute --to markdown %:r.ipynb<CR>', { desc = '[M]arkdown: [E]xecute notebook → .md' })
+
+-- Set colorscheme at end
+pcall(vim.cmd, 'colorscheme gruvbox')
