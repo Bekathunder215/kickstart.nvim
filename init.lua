@@ -169,6 +169,9 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- User option overrides that live outside the kickstart baseline.
+require 'custom.options'
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -390,11 +393,16 @@ require('lazy').setup({
       require('telescope').setup {
         defaults = {
           file_ignore_patterns = { 'node_modules', '.git', 'build', 'tmp', '__pycache__' },
+          mappings = {
+            i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+          },
           layout_config = {
             horizontal = { preview_width = 0.55 },
           },
         },
-        pickers = {},
+        pickers = {
+          find_files = { theme = 'dropdown' },
+        },
         extensions = {
           ['ui-select'] = { require('telescope.themes').get_dropdown() },
         },
@@ -503,6 +511,20 @@ require('lazy').setup({
     },
 
     config = function()
+      local function get_python_path()
+        local venv_dir = vim.fn.finddir('.venv', '.;')
+        if venv_dir ~= '' then
+          return vim.fn.fnamemodify(venv_dir, ':p') .. 'bin/python'
+        end
+
+        local python3 = vim.fn.exepath 'python3'
+        if python3 ~= '' then
+          return python3
+        end
+
+        return 'python3'
+      end
+
       -- Brief aside: **What is LSP?**
       --
       -- LSP is an initialism you've probably heard, but might not understand what it is.
@@ -658,6 +680,22 @@ require('lazy').setup({
             },
           },
         },
+        gopls = {},
+        ts_ls = {
+          settings = {
+            typescript = {
+              suggest = { completeFunctionCalls = true },
+              preferences = { includeCompletionsForImportStatements = true },
+            },
+            javascript = {
+              suggest = { completeFunctionCalls = true },
+              preferences = { includeCompletionsForImportStatements = true },
+            },
+          },
+        },
+        ltex_plus = {
+          filetypes = { 'markdown', 'tex', 'latex' },
+        },
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
 
@@ -712,47 +750,6 @@ require('lazy').setup({
         vim.lsp.enable(name)
       end
     end,
-  },
-
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    event = { 'BufWritePre' },
-    cmd = { 'ConformInfo' },
-    keys = {
-      {
-        '<leader>f',
-        function() require('conform').format { async = true, lsp_format = 'fallback' } end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
-    },
-    ---@module 'conform'
-    ---@type conform.setupOpts
-    opts = {
-      notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        if disable_filetypes[vim.bo[bufnr].filetype] then
-          return nil
-        else
-          return {
-            timeout_ms = 500,
-            lsp_format = 'fallback',
-          }
-        end
-      end,
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
-      },
-    },
   },
 
   { -- Autocompletion
@@ -829,7 +826,14 @@ require('lazy').setup({
       },
 
       sources = {
-        default = { 'lsp', 'path', 'snippets' },
+        default = { 'lazydev', 'lsp', 'path', 'snippets' },
+        providers = {
+          lazydev = {
+            name = 'LazyDev',
+            module = 'lazydev.integrations.blink',
+            score_offset = 100,
+          },
+        },
       },
 
       snippets = { preset = 'luasnip' },
@@ -847,8 +851,6 @@ require('lazy').setup({
       signature = { enabled = true },
     },
   },
-
-  require 'custom.plugins.colorschemes',
 
   -- Highlight todo, notes, etc in comments
   {
@@ -905,7 +907,22 @@ require('lazy').setup({
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
     config = function()
       -- ensure basic parser are installed
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local parsers = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'python',
+        'javascript',
+        'typescript',
+        'query',
+        'vim',
+        'vimdoc',
+      }
       require('nvim-treesitter').install(parsers)
 
       ---@param buf integer
@@ -963,21 +980,16 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.neo-tree',
-  require 'kickstart.plugins.formatting',
-  require 'kickstart.plugins.iron',
-  require 'kickstart.plugins.markdown',
-  require 'kickstart.plugins.lazygit',
-  require 'kickstart.plugins.vimtex',
   require 'kickstart.plugins.ui',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommended keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommended keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
-  --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  --  User-specific plugins live in `lua/custom/plugins/*.lua`.
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
@@ -1004,84 +1016,10 @@ require('lazy').setup({
     },
   },
 })
-
-local function activate_venv_or_create()
-  local venv_dir = vim.fn.finddir('.venv', '.;')
-
-  if venv_dir ~= '' then
-    local venv_path = vim.fn.fnamemodify(venv_dir, ':p')
-    vim.env.VIRTUAL_ENV = venv_path
-    vim.notify('Virtual environment activated: ' .. venv_path, vim.log.levels.INFO)
-    return true
-  end
-
-  vim.notify('No virtual environment found. Creating one in the current directory...', vim.log.levels.WARN)
-  vim.fn.system 'python3 -m venv .venv'
-
-  if vim.v.shell_error == 0 then
-    local new_venv_path = vim.fn.getcwd() .. '/.venv'
-    vim.env.VIRTUAL_ENV = new_venv_path
-    vim.notify('Virtual environment created and activated: ' .. new_venv_path, vim.log.levels.INFO)
-    return true
-  else
-    vim.notify('Failed to create virtual environment', vim.log.levels.ERROR)
-    return false
-  end
-end
-
-local function RunPython()
-  local file = vim.fn.expand '%:p'
-  local venv = vim.fn.finddir('.venv', '.;')
-
-  vim.cmd 'w'
-
-  if venv ~= '' then
-    local python = vim.fn.fnamemodify(venv, ':p') .. 'bin/python'
-    vim.cmd('!' .. python .. ' ' .. vim.fn.shellescape(file))
-  else
-    vim.cmd('!python3 ' .. vim.fn.shellescape(file))
-  end
-end
-
-local venv = vim.fn.getcwd() .. '/.venv/bin/python'
-if vim.fn.executable(venv) == 1 then
-  vim.g.python3_host_prog = venv
-end
-
--- Register the ":RunPython" command in Neovim
-vim.api.nvim_create_user_command('RunPython', function()
-  RunPython()
-end, {})
-
--- Set a keybinding to run Python files with <leader>p
-vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = '[P]ython: Run file with venv' })
-vim.keymap.set('n', '<Leader>v', function()
-  activate_venv_or_create()
-end, { desc = '[V]irtual environment: Activate or create' })
-
--- [[ Quickfix Keymaps ]]
-vim.keymap.set('n', '<leader>qo', '<cmd>cfdo edit<CR>', { desc = '[Q]uickfix: [O]pen all entries in tabs' })
-vim.keymap.set('n', '[q', '<cmd>cprev<CR>', { desc = '[Q]uickfix: [P]revious item' })
-vim.keymap.set('n', ']q', '<cmd>cnext<CR>', { desc = '[Q]uickfix: [N]ext item' })
-
--- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
-
--- [[ Markdown & Jupyter Keymaps ]]
-vim.keymap.set('n', '<leader>mt', function()
-  local buf_ft = vim.bo.filetype
-  if buf_ft ~= 'markdown' then
-    vim.notify('Not a markdown file', vim.log.levels.WARN)
-    return
-  end
-  vim.cmd 'TSBufToggle highlight'
-  vim.notify('Toggled Treesitter highlighting', vim.log.levels.INFO)
-end, { desc = '[M]arkdown: [T]oggle Treesitter highlighting' })
-
-vim.keymap.set('n', '<leader>mp', ':MarkdownPreview<CR>', { desc = '[M]arkdown: [P]review in browser' })
-vim.keymap.set('n', '<leader>mo', ':MarkdownPreviewToggle<CR>', { desc = '[M]arkdown: [O]pen/Close preview' })
-vim.keymap.set('n', '<leader>mi', ':!jupytext --sync %<CR>', { desc = '[M]arkdown: Sync .ipynb ↔ .md' })
-vim.keymap.set('n', '<leader>me', ':!jupyter nbconvert --execute --to markdown %:r.ipynb<CR>', { desc = '[M]arkdown: [E]xecute notebook → .md' })
+require 'custom.post'
 
 -- Set colorscheme at end
 pcall(vim.cmd, 'colorscheme gruvbox')
+
+-- The line beneath this is called `modeline`. See `:help modeline`
+-- vim: ts=2 sts=2 sw=2 et

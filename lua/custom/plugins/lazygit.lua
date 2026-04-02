@@ -1,6 +1,6 @@
--- lazygit.nvim - Terminal UI for git commands
--- https://github.com/kdheepak/lazygit.nvim
-
+-- User plugin: Terminal UI for git commands
+---@module 'lazy'
+---@type LazySpec
 return {
   'kdheepak/lazygit.nvim',
   cmd = {

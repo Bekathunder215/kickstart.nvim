@@ -1,12 +1,27 @@
--- none-ls.nvim (null-ls) - Code formatting and diagnostics
--- https://github.com/nvimtools/none-ls.nvim
-
+---@module 'lazy'
+---@type LazySpec
 return {
   'nvimtools/none-ls.nvim',
   event = { 'BufReadPre', 'BufNewFile' },
   dependencies = {
     'nvimtools/none-ls-extras.nvim',
     'jayp0521/mason-null-ls.nvim',
+  },
+  keys = {
+    {
+      '<leader>f',
+      function()
+        vim.lsp.buf.format {
+          async = false,
+          timeout_ms = 10000,
+          filter = function(client)
+            return client.name == 'null-ls'
+          end,
+        }
+      end,
+      mode = { 'n', 'v' },
+      desc = '[F]ormat buffer',
+    },
   },
   config = function()
     local null_ls = require 'null-ls'

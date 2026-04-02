@@ -1,6 +1,6 @@
--- iron.nvim - Interactive REPL over Neovim
--- https://github.com/Vigemus/iron.nvim
-
+-- User plugin: Interactive REPL over Neovim
+---@module 'lazy'
+---@type LazySpec
 return {
   'Vigemus/iron.nvim',
   keys = {

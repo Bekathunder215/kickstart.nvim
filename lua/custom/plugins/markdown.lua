@@ -1,7 +1,6 @@
--- Markdown and Jupyter tools
--- markdown-preview.nvim: Preview markdown files in browser
--- clipboard-image.nvim: Paste images into markdown
-
+-- User plugins: Markdown preview and image pasting
+---@module 'lazy'
+---@type LazySpec
 return {
   {
     'iamcco/markdown-preview.nvim',
