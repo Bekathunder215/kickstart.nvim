@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.o.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
@@ -111,10 +111,15 @@ vim.o.mouse = 'a'
 vim.o.showmode = false
 
 -- Sync clipboard between OS and Neovim.
---  Schedule the setting after `UiEnter` because it can increase startup-time.
+--  Schedule the setting after `UiEnter` to improve startup time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
 vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
+
+-- Disable optional providers (not needed, reduces warnings)
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_python3_provider = 0 -- We use venv instead
+vim.g.loaded_ruby_provider = 0
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -129,8 +134,8 @@ vim.o.smartcase = true
 -- Keep signcolumn on by default
 vim.o.signcolumn = 'yes'
 
--- Decrease update time
-vim.o.updatetime = 250
+-- Decrease update time for better responsiveness
+vim.opt.updatetime = 200
 
 -- Decrease mapped sequence wait time
 vim.o.timeoutlen = 300
@@ -167,9 +172,7 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = 'Clear search highlights' })
 
 -- Diagnostic Config & Keymaps
 -- See :help vim.diagnostic.Opts
@@ -385,15 +388,13 @@ require('lazy').setup({
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup {
-        -- You can put your default mappings / updates / etc. in here
-        --  All the info you're looking for is in `:help telescope.setup()`
-        --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
-        -- pickers = {}
+        defaults = {
+          file_ignore_patterns = { 'node_modules', '.git', 'build', 'tmp', '__pycache__' },
+          layout_config = {
+            horizontal = { preview_width = 0.55 },
+          },
+        },
+        pickers = {},
         extensions = {
           ['ui-select'] = { require('telescope.themes').get_dropdown() },
         },
@@ -453,7 +454,6 @@ require('lazy').setup({
 
       -- Override default behavior and theme when searching
       vim.keymap.set('n', '<leader>/', function()
-        -- You can pass additional configuration to Telescope to change the theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
@@ -501,6 +501,7 @@ require('lazy').setup({
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
     },
+
     config = function()
       -- Brief aside: **What is LSP?**
       --
@@ -602,12 +603,61 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        --ast_grep = {
+        --  settings = {},
+        --},
+        --basedpyright = {
+        --  settings = {},
+        --},
+        --harper_ls = {
+        --  settings = {},
+        --},
+        --jedi_language_server = {
+        --  settings = {},
+        --},
+        --mutt_ls = {
+        --  settings = {},
+        --},
+        --pylsp = {
+        --  settings = {},
+        --},
+        --pylyzer = {
+        --  settings = {},
+        --},
+        --pyre = {
+        --  settings = {},
+        --},
+        --ruff = {
+        --  settings = {},
+        --},
+        --sourcery = {
+        --  settings = {},
+        --},
         -- rust_analyzer = {},
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
+        pyright = {
+          capabilities = { format = false },
+          before_init = function(_, config)
+            config.settings = config.settings or {}
+            config.settings.python = config.settings.python or {}
+            config.settings.python.pythonPath = get_python_path()
+          end,
+          settings = {
+            python = {
+              analysis = {
+                typeCheckingMode = 'basic',
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                diagnosticMode = 'openFilesOnly',
+                autoImportCompletions = true,
+                indexing = true,
+              },
+            },
+          },
+        },
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
 
@@ -725,12 +775,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
         opts = {},
       },
@@ -798,27 +848,7 @@ require('lazy').setup({
     },
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
-      }
-
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-    end,
-  },
+  require 'custom.plugins.colorschemes',
 
   -- Highlight todo, notes, etc in comments
   {
@@ -929,9 +959,16 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.formatting',
+  require 'kickstart.plugins.iron',
+  require 'kickstart.plugins.markdown',
+  require 'kickstart.plugins.lazygit',
+  require 'kickstart.plugins.vimtex',
+  require 'kickstart.plugins.ui',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommended keymaps
@@ -968,5 +1005,83 @@ require('lazy').setup({
   },
 })
 
+local function activate_venv_or_create()
+  local venv_dir = vim.fn.finddir('.venv', '.;')
+
+  if venv_dir ~= '' then
+    local venv_path = vim.fn.fnamemodify(venv_dir, ':p')
+    vim.env.VIRTUAL_ENV = venv_path
+    vim.notify('Virtual environment activated: ' .. venv_path, vim.log.levels.INFO)
+    return true
+  end
+
+  vim.notify('No virtual environment found. Creating one in the current directory...', vim.log.levels.WARN)
+  vim.fn.system 'python3 -m venv .venv'
+
+  if vim.v.shell_error == 0 then
+    local new_venv_path = vim.fn.getcwd() .. '/.venv'
+    vim.env.VIRTUAL_ENV = new_venv_path
+    vim.notify('Virtual environment created and activated: ' .. new_venv_path, vim.log.levels.INFO)
+    return true
+  else
+    vim.notify('Failed to create virtual environment', vim.log.levels.ERROR)
+    return false
+  end
+end
+
+local function RunPython()
+  local file = vim.fn.expand '%:p'
+  local venv = vim.fn.finddir('.venv', '.;')
+
+  vim.cmd 'w'
+
+  if venv ~= '' then
+    local python = vim.fn.fnamemodify(venv, ':p') .. 'bin/python'
+    vim.cmd('!' .. python .. ' ' .. vim.fn.shellescape(file))
+  else
+    vim.cmd('!python3 ' .. vim.fn.shellescape(file))
+  end
+end
+
+local venv = vim.fn.getcwd() .. '/.venv/bin/python'
+if vim.fn.executable(venv) == 1 then
+  vim.g.python3_host_prog = venv
+end
+
+-- Register the ":RunPython" command in Neovim
+vim.api.nvim_create_user_command('RunPython', function()
+  RunPython()
+end, {})
+
+-- Set a keybinding to run Python files with <leader>p
+vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = '[P]ython: Run file with venv' })
+vim.keymap.set('n', '<Leader>v', function()
+  activate_venv_or_create()
+end, { desc = '[V]irtual environment: Activate or create' })
+
+-- [[ Quickfix Keymaps ]]
+vim.keymap.set('n', '<leader>qo', '<cmd>cfdo edit<CR>', { desc = '[Q]uickfix: [O]pen all entries in tabs' })
+vim.keymap.set('n', '[q', '<cmd>cprev<CR>', { desc = '[Q]uickfix: [P]revious item' })
+vim.keymap.set('n', ']q', '<cmd>cnext<CR>', { desc = '[Q]uickfix: [N]ext item' })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+
+-- [[ Markdown & Jupyter Keymaps ]]
+vim.keymap.set('n', '<leader>mt', function()
+  local buf_ft = vim.bo.filetype
+  if buf_ft ~= 'markdown' then
+    vim.notify('Not a markdown file', vim.log.levels.WARN)
+    return
+  end
+  vim.cmd 'TSBufToggle highlight'
+  vim.notify('Toggled Treesitter highlighting', vim.log.levels.INFO)
+end, { desc = '[M]arkdown: [T]oggle Treesitter highlighting' })
+
+vim.keymap.set('n', '<leader>mp', ':MarkdownPreview<CR>', { desc = '[M]arkdown: [P]review in browser' })
+vim.keymap.set('n', '<leader>mo', ':MarkdownPreviewToggle<CR>', { desc = '[M]arkdown: [O]pen/Close preview' })
+vim.keymap.set('n', '<leader>mi', ':!jupytext --sync %<CR>', { desc = '[M]arkdown: Sync .ipynb ↔ .md' })
+vim.keymap.set('n', '<leader>me', ':!jupyter nbconvert --execute --to markdown %:r.ipynb<CR>', { desc = '[M]arkdown: [E]xecute notebook → .md' })
+
+-- Set colorscheme at end
+pcall(vim.cmd, 'colorscheme gruvbox')
