@@ -40,6 +40,17 @@ local function run_python()
   end
 end
 
+local function run_go()
+  if vim.fn.executable 'go' ~= 1 then
+    vim.notify('Go executable not found in PATH', vim.log.levels.ERROR)
+    return
+  end
+
+  local file = vim.fn.expand '%:p'
+  vim.cmd 'w'
+  vim.cmd('!go run ' .. vim.fn.shellescape(file))
+end
+
 function M.setup()
   local venv_python = vim.fn.getcwd() .. '/.venv/bin/python'
   if vim.fn.executable(venv_python) == 1 then
@@ -50,7 +61,17 @@ function M.setup()
     run_python()
   end, {})
 
-  vim.keymap.set('n', '<leader>p', ':RunPython<CR>', { desc = '[P]ython: Run file with venv' })
+  vim.api.nvim_create_user_command('RunGo', function()
+    run_go()
+  end, {})
+
+  vim.keymap.set('n', '<leader>pp', ':RunPython<CR>', { desc = '[P]rogram: Run [P]ython file' })
+  vim.keymap.set('n', '<leader>pg', ':RunGo<CR>', { desc = '[P]rogram: Run [G]o file' })
+  vim.keymap.set('n', '<leader>pv', function()
+    activate_venv_or_create()
+  end, { desc = '[P]rogram: Python [V]env activate/create' })
+
+  -- Backward-compatible alias.
   vim.keymap.set('n', '<leader>v', function()
     activate_venv_or_create()
   end, { desc = '[V]irtual environment: Activate or create' })

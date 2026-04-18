@@ -28,6 +28,17 @@ function M.setup()
 
   vim.keymap.set('n', '<leader>mi', ':!jupytext --sync %<CR>', { desc = '[M]arkdown: Sync .ipynb ↔ .md' })
   vim.keymap.set('n', '<leader>me', ':!jupyter nbconvert --execute --to markdown %:r.ipynb<CR>', { desc = '[M]arkdown: [E]xecute notebook → .md' })
+
+  -- Theme switching
+  vim.keymap.set('n', '<leader>tn', function()
+    require('custom.colorscheme').next_theme()
+  end, { desc = '[T]heme: [N]ext' })
+  vim.keymap.set('n', '<leader>tp', function()
+    require('custom.colorscheme').prev_theme()
+  end, { desc = '[T]heme: [P]revious' })
+  vim.keymap.set('n', '<leader>tc', function()
+    require('custom.colorscheme').pick_theme()
+  end, { desc = '[T]heme: [C]hoose' })
 end
 
 return M

@@ -7,9 +7,31 @@ return {
   event = { 'BufReadPre', 'BufNewFile' },
   config = function()
     local lint = require 'lint'
-    lint.linters_by_ft = {
-      markdown = { 'markdownlint' }, -- Make sure to install `markdownlint` via mason / npm
-    }
+    local linters_by_ft = {}
+
+    if vim.fn.executable 'ruff' == 1 then
+      linters_by_ft.python = { 'ruff' }
+    end
+
+    local js_linters = {}
+    if vim.fn.executable 'eslint_d' == 1 then
+      table.insert(js_linters, 'eslint_d')
+    end
+    if vim.fn.executable 'eslint' == 1 then
+      table.insert(js_linters, 'eslint')
+    end
+    if #js_linters > 0 then
+      linters_by_ft.javascript = js_linters
+      linters_by_ft.javascriptreact = js_linters
+      linters_by_ft.typescript = js_linters
+      linters_by_ft.typescriptreact = js_linters
+    end
+
+    if vim.fn.executable 'markdownlint' == 1 then
+      linters_by_ft.markdown = { 'markdownlint' }
+    end
+
+    lint.linters_by_ft = linters_by_ft
 
     -- To allow other plugins to add linters to require('lint').linters_by_ft,
     -- instead set linters_by_ft like this:
@@ -52,7 +74,11 @@ return {
         -- Only run the linter in buffers that you can modify in order to
         -- avoid superfluous noise, notably within the handy LSP pop-ups that
         -- describe the hovered symbol using Markdown.
-        if vim.bo.modifiable then lint.try_lint() end
+        local ft = vim.bo.filetype
+        local configured = lint.linters_by_ft[ft]
+        if vim.bo.modifiable and configured and #configured > 0 then
+          lint.try_lint()
+        end
       end,
     })
   end,

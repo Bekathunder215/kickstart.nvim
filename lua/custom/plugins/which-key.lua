@@ -8,6 +8,7 @@ return {
       { '<leader>a', group = '+ai', mode = { 'n', 'x' } },
       { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
       { '<leader>d', group = '[D]ocument' },
+      { '<leader>p', group = '[P]rogram' },
       { '<leader>r', group = '[R]ename' },
       { '<leader>w', group = '[W]orkspace' },
     }
